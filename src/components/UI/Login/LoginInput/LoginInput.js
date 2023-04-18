@@ -24,14 +24,15 @@ const icon = css`
     height: 40px;
 `;
 
-const LoginInput = ({ type, placeholder, onChange, children }) => {
+const LoginInput = ({ type, placeholder, onChange, name, children }) => {
     return (
         <div css={loginInput}>
             <div css={icon}>{children}</div>
             <Input 
             type={type} 
             placeholder={placeholder} 
-            onChange={onChange}/>
+            onChange={onChange}
+            name={name}/>
         </div>
     );
 };

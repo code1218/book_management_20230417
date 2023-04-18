@@ -10,13 +10,14 @@ const input = css`
     height: 40px;
 `;
 
-const Input = ({ type, placeholder, onChange }) => {
+const Input = ({ type, placeholder, onChange, name }) => {
     return (
         <>
             <input css={input} 
             type={type} 
             placeholder={placeholder} 
-            onChange={onChange}/>
+            onChange={onChange}
+            name={name}/>
         </>
     );
 };
