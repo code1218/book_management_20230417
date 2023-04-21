@@ -15,7 +15,6 @@ const AuthRoute = ({ path, element }) => {
 
     if(!authenticated) {
         const accessToken = localStorage.getItem("accessToken");
-
         if(accessToken !== null){
             validateToken(accessToken).then((flag) => {
                 setAuthenticated(flag);
@@ -29,14 +28,12 @@ const AuthRoute = ({ path, element }) => {
         if(permitAll.includes(path)) {
             return element;
         }
-
         return <Navigate to="/login" />;
     }
 
     if(permitAll.includes(path)) {
         return <Navigate to="/" />;
     }
-
     return element;
 };
 
