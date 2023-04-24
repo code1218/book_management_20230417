@@ -18,7 +18,7 @@ const sidebar = (isOpen) => css`
     width: 250px;
     box-shadow: -1px 0px 5px #dbdbdb;
     transition: left 1s ease;
-
+    background-color: white;
     ${isOpen ? "" : `
         cursor: pointer;
     `}
@@ -48,7 +48,7 @@ const userIcon = css`
     height: 45px;
     background-color: #713fff;
     color: white;
-    font-size: 30px;
+    font-size: 24px;
     font-weight: 600;
 `;
 
