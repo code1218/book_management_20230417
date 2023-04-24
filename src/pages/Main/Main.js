@@ -1,8 +1,9 @@
 /** @jsxImportSource @emotion/react */
 import { css } from '@emotion/react'
 import axios from 'axios';
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { useEffect } from 'react';
+import { useQuery } from 'react-query';
 import Sidebar from '../../components/Sidebar/Sidebar';
 import BookCard from '../../components/UI/BookCard/BookCard';
 
@@ -22,20 +23,43 @@ const main = css`
 `;
 
 const Main = () => {
-    useEffect(() => {
-        searchBooks();
-    }, []);
-
-    const searchBooks = async () => {
-        const searchParam = {
-            page: 1
-        }
-        const option = {
-            
-        }
+    const [ searchParam, setSearchParam ] = useState({
+        page: 1
+    });
+    const [ books, setBooks ] = useState([]);
+    const [ refresh, setRefresh ] = useState(false);
+    const lastPage = useRef();
+    const searchBooks = useQuery(["searchBooks"], async () => {
         const response = await axios.get("http://localhost:8080/books", {params: {...searchParam}});
-        console.log(response);
-    }
+        return response;
+    }, {
+        enabled: refresh,
+        onSuccess: (response) => {
+            if(refresh) {
+                setRefresh(false);
+            }
+            setBooks([...books, ...response.data]);
+            setSearchParam({...searchParam, page: searchParam.page + 1});
+        }
+    });
+
+    useEffect(() => {
+        
+        const io = new IntersectionObserver((entries, io) => {
+            entries.forEach(
+                async (entry) => {
+                    console.log(entry)
+                    if(entry.isIntersecting) {
+                        io.unobserve(entry.target);
+                        setRefresh(true);
+                    }
+                    
+                }
+            )
+            
+        }, { threshold: 0.7 });
+        io.observe(lastPage.current);
+    }, [books]);
 
     return (
         <div css={mainContainer}>
@@ -47,13 +71,12 @@ const Main = () => {
                 </div>
             </header>
             <main css={main}>
-                <BookCard></BookCard>
-                <BookCard></BookCard>
-                <BookCard></BookCard>
-                <BookCard></BookCard>
-                <BookCard></BookCard>
-                <BookCard></BookCard>
+                {books?.map(book => {
+                        return (<BookCard key={book?.bookId} book={book}></BookCard>);
+                    })}
+                <div ref={lastPage}></div>
             </main>
+            
         </div>
     );
 };
