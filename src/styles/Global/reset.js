@@ -37,13 +37,16 @@ export const Reset = css`
         display: block;
     }
     body {
+        line-height: 1;
+    }
+    #root {
+        position: relative;
         margin: 10px auto;
         border: 3px solid #dbdbdb;
         border-radius: 10px;
         padding: 10px;
         width: 750px;
         height: 900px;
-        line-height: 1;
         overflow: hidden;
     }
     ol, ul {
