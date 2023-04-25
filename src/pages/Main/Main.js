@@ -8,6 +8,7 @@ import { useEffect } from 'react';
 import { useQuery } from 'react-query';
 import Sidebar from '../../components/Sidebar/Sidebar';
 import BookCard from '../../components/UI/BookCard/BookCard';
+import { BsMenuDown } from 'react-icons/bs';
 
 const mainContainer = css`
     padding: 10px;
@@ -27,11 +28,29 @@ const searchItems = css`
     justify-content: space-between;
     padding: 10px;
 `;
-const categoryGroup = css`
-    display: flex;
-    flex-wrap: wrap;
-    max-width: 250px;
-    padding: 10px;
+const categoryButton = css`
+    position: relative;
+    border: 1px solid #dbdbdb;
+    border-radius: 5px;
+    width: 30px;
+    height: 30px;
+    background-color: white;
+    cursor: pointer;
+`;
+const categoryGroup = (isOpen) => css`
+    position: absolute;
+    top: 30px;
+    right: -151px;
+    display: ${isOpen ? "flex" : "none"};
+    flex-direction: column;
+    align-items: flex-start;
+    border: 1px solid #dbdbdb;
+    border-radius: 4px;
+    padding: 5px;
+    width: 180px;
+    max-height: 100px;
+    background-color: white;
+    overflow-y: auto;
 `;
 const searchInput = css`
     border: 1px solid #dbdbdb;
@@ -48,11 +67,14 @@ const main = css`
 `;
 
 const Main = () => {
-    const [ searchParam, setSearchParam ] = useState({page: 1, searchValue: "", categoryId: 0});
+    const [ searchParam, setSearchParam ] = useState({page: 1, searchValue: "", categoryIds: []});
     const [ refresh, setRefresh ] = useState(false);
+    const [ categoryRefresh, setCategoryRefresh ] = useState(true);
+    const [ isOpen, setIsOpen ] = useState(false);
     const [ books, setBooks ] = useState([]);
     const [ lastPage, setLastPage ] = useState(1);
     const lastBookRef = useRef();
+    const categoryButtonRef = useRef();
 
     useEffect(() => {
         const observerService = (entries, observer) => {
@@ -98,7 +120,33 @@ const Main = () => {
         }
         const response = await axios.get("http://localhost:8080/categories", option);
         return response;
+    }, {
+        enabled: categoryRefresh,
+        onSuccess: () => {
+            if(categoryRefresh) {
+                setCategoryRefresh(false);
+            }
+        }
     })
+
+    const categoryClickHandle = (e) => {
+        e.stopPropagation();
+
+        if(isOpen && (e.target === categoryButtonRef.current)) {
+            setIsOpen(false);
+        }else {
+            setIsOpen(true);
+        }
+    }
+
+    const categoryCheckHandle = (e) => {
+        if(e.target.checked) {
+            setSearchParam({...searchParam, categoryIds: [...searchParam.categoryIds, e.target.value]});
+        }else {
+            setSearchParam({...searchParam, categoryIds: [...searchParam.categoryIds.filter(id => id !== e.target.value)]});
+        }
+        setRefresh(true);
+    }
 
     return (
         <div css={mainContainer}>
@@ -106,9 +154,18 @@ const Main = () => {
             <header css={header}>
                 <div css={title}>도서검색</div>
                 <div css={searchItems}>
-                    <div css={categoryGroup}>
-
-                    </div>
+                    <button css={categoryButton} onClick={categoryClickHandle} ref={categoryButtonRef}>
+                        <BsMenuDown />
+                        <div css={categoryGroup(isOpen)}>
+                            {categories.data !== undefined 
+                                ? categories.data.data.map(category => 
+                                    (<div key={category.categoryId}>
+                                        <input type="checkbox" onChange={categoryCheckHandle} id={"ct-" + category.categoryId} value={category.categoryId} />
+                                        <label htmlFor={"ct-" + category.categoryId}>{category.categoryName}</label>
+                                    </div>)) 
+                                : ""}
+                        </div>
+                    </button>
                     <input css={searchInput} type="search" />
                 </div>
             </header>
