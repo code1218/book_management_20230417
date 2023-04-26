@@ -22,7 +22,6 @@ const AuthRouteReactQuery = ({ path, element }) => {
     }, [refresh]);
     
     if(isLoading) {
-        console.log("test")
         return (<div>로딩중...</div>);
     }
 

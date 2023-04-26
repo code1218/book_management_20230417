@@ -9,6 +9,7 @@ import { useQuery } from 'react-query';
 import Sidebar from '../../components/Sidebar/Sidebar';
 import BookCard from '../../components/UI/BookCard/BookCard';
 import { BsMenuDown } from 'react-icons/bs';
+import QueryString from 'qs';
 
 const mainContainer = css`
     padding: 10px;
@@ -93,7 +94,8 @@ const Main = () => {
         params: searchParam,
         headers: {
             Authorization: localStorage.getItem("accessToken")
-        }
+        },
+        paramsSerializer: params => QueryString.stringify(params, {arrayFormat: 'repeat'})
     }
     const searchBooks = useQuery(["searchBooks"], async () => {
         const response = await axios.get("http://localhost:8080/books", option);
@@ -103,13 +105,12 @@ const Main = () => {
             if(refresh) {
                 setRefresh(false);
             }
-            console.log(response);
             const totalCount = response.data.totalCount;
             setLastPage(totalCount % 20 === 0 ? totalCount / 20 : Math.ceil(totalCount / 20));
             setBooks([...books, ...response.data.bookList]);
             setSearchParam({...searchParam, page: searchParam.page + 1});
         },
-        enabled: refresh && searchParam.page < lastPage + 1
+        enabled: refresh && (searchParam.page < lastPage + 1 || lastPage === 0)
     });
 
     const categories = useQuery(["categories"], async () => {
@@ -141,11 +142,24 @@ const Main = () => {
 
     const categoryCheckHandle = (e) => {
         if(e.target.checked) {
-            setSearchParam({...searchParam, categoryIds: [...searchParam.categoryIds, e.target.value]});
+            setSearchParam({...searchParam, page: 1, categoryIds: [...searchParam.categoryIds, e.target.value]});
         }else {
-            setSearchParam({...searchParam, categoryIds: [...searchParam.categoryIds.filter(id => id !== e.target.value)]});
+            setSearchParam({...searchParam, page: 1, categoryIds: [...searchParam.categoryIds.filter(id => id !== e.target.value)]});
         }
+        setBooks([]);
         setRefresh(true);
+    } 
+
+    const searchInputHandle = (e) => {
+        setSearchParam({...searchParam, searchValue: e.target.value});
+    }
+
+    const searchSubmitHandle = (e) => {
+        if(e.keyCode === 13) {
+            setSearchParam({...searchParam, page: 1});
+            setBooks([]);
+            setRefresh(true);
+        }
     }
 
     return (
@@ -166,7 +180,7 @@ const Main = () => {
                                 : ""}
                         </div>
                     </button>
-                    <input css={searchInput} type="search" />
+                    <input css={searchInput} type="search" onKeyUp={searchSubmitHandle} onChange={searchInputHandle} />
                 </div>
             </header>
             <main css={main}>

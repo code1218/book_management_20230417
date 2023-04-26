@@ -106,7 +106,6 @@ const Sidebar = () => {
         {
             enabled: accessToken
         });
-        console.log(response)
         return response;
     });
 
