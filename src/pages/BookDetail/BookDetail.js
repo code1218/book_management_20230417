@@ -2,7 +2,7 @@
 import { css } from '@emotion/react'
 import axios from 'axios';
 import React from 'react';
-import { useQuery } from 'react-query';
+import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { useParams } from 'react-router-dom';
 import Sidebar from '../../components/Sidebar/Sidebar';
 
@@ -11,7 +11,9 @@ const mainContainer = css`
 `;
 
 const BookDetail = () => {
+    const queryClient = useQueryClient();
     const { bookId } = useParams();
+    const { data } = queryClient.getQueryData("principal");
 
     const getBook = useQuery(["getBook"], async () => {
         const option = {
@@ -33,6 +35,38 @@ const BookDetail = () => {
         return response;
     });
 
+    const getLikeStatus = useQuery(["getLikeStatus"], async () => {
+        const option = {
+            headers: {
+                Authorization: localStorage.getItem("accessToken")
+            }
+        }
+        const response = await axios.get(`http://localhost:8080/book/${bookId}/like/status`, option);
+        return response;
+    });
+
+    const setLike = useMutation(async () => {
+        return await axios.post(`http://localhost:8080/book/${bookId}/like`,{},{headers: {
+            Authorization: localStorage.getItem("accessToken")
+        }});
+    }, {
+        onSuccess: () => {
+            queryClient.invalidateQueries('getLikeCount');
+            queryClient.invalidateQueries('getLikeStatus');
+        }
+    });
+
+    const disLike = useMutation(async () => {
+        return await axios.delete(`http://localhost:8080/book/${bookId}/like`,{headers: {
+            Authorization: localStorage.getItem("accessToken")
+        }});
+    }, {
+        onSuccess: () => {
+            queryClient.invalidateQueries('getLikeCount');
+            queryClient.invalidateQueries('getLikeStatus');
+        }
+    });
+
     if(getBook.isLoading) {
         return <div>불러오는 중...</div>
     }
@@ -52,7 +86,11 @@ const BookDetail = () => {
 
                 </div>
                 <div>
-                    <button></button>
+                    {getLikeStatus.isLoading ? "" : getLikeStatus.data.data === 0 ? (<button onClick={() => {
+                        setLike.mutate();
+                    }}>추천</button>) : (<button onClick={() => {
+                        disLike.mutate();
+                    }}>추천취소</button>)}
                 </div>
             </main>
         </div>
