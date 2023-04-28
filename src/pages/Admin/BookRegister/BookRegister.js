@@ -26,6 +26,14 @@ const BookRegister = () => {
     
     const [ searchParams, setSearchParams ] = useState({page: 1, searchValue: ""});
     const [ refresh, setRefresh ] = useState(true); 
+    const [ findBook, setFindBook ] = useState({
+        bookId: "",
+        bookName: "",
+        authorName: "",
+        publisherName: "",
+        categoryName: "",
+        coverImgUrl: ""
+    });
 
     const getBooks = useQuery(["registerSearchBooks"], async ()=> {
         const option = {
@@ -61,6 +69,16 @@ const BookRegister = () => {
         setRefresh(true);
     }
 
+    const checkBookHandle = (e) => {
+        console.log(e.target.checked)
+        if(!e.target.checked) {
+            return;
+        }
+        console.log(e.target.value)
+        const book = getBooks.data.data.bookList.filter(book => book.bookId === parseInt(e.target.value))[0];
+        setFindBook({...book});
+    }
+
     const pagination = () => {
         if(getBooks.isLoading) {
             return (<></>);
@@ -83,10 +101,30 @@ const BookRegister = () => {
 
         return (
             <>
-                {pageNumbers.map(page => (<button onClick={() => {
+                <button disabled={nowPage === 1} onClick={() => {
+                    setSearchParams({...searchParams, page: 1});
+                    setRefresh(true);
+                }}>&#60;&#60;</button>
+
+                <button disabled={nowPage === 1} onClick={() => {
+                    setSearchParams({...searchParams, page: nowPage - 1});
+                    setRefresh(true);
+                }}>&#60;</button>
+
+                {pageNumbers.map(page => (<button key={page} onClick={() => {
                     setSearchParams({...searchParams, page});
                     setRefresh(true);
-                }}>{page}</button>))}
+                }} disabled={page === nowPage}>{page}</button>))}
+
+                <button disabled={nowPage === lastPage} onClick={() => {
+                    setSearchParams({...searchParams, page: nowPage + 1});
+                    setRefresh(true);
+                }}>&#62;</button>
+
+                <button disabled={nowPage === lastPage} onClick={() => {
+                    setSearchParams({...searchParams, page: lastPage});
+                    setRefresh(true);
+                }}>&#62;&#62;</button>
             </>
         )
     }
@@ -112,7 +150,7 @@ const BookRegister = () => {
                     <tbody>
                         {getBooks.isLoading ? "" : getBooks.data.data.bookList.map(book => (
                             <tr key={book.bookId}>
-                                <td css={thAndTd}><input type="radio" name='select' value={book.bookId}/></td>
+                                <td css={thAndTd}><input type="radio" onChange={checkBookHandle} name='select' value={book.bookId}/></td>
                                 <td css={thAndTd}>{book.categoryName}</td>
                                 <td css={thAndTd}>{book.bookName}</td>
                                 <td css={thAndTd}>{book.authorName}</td>
@@ -123,33 +161,31 @@ const BookRegister = () => {
                 </table>
             </div>
             <div>
-                <button>&#60;</button>
                 {pagination()}
-                <button>&#62;</button>
             </div>
             <div>
                 <label>도서코드</label>
-                <input type="text" readOnly/>
+                <input type="text" value={findBook.bookId} readOnly/>
             </div>
             <div>
                 <label>분류</label>
-                <input type="text" readOnly/>
+                <input type="text" value={findBook.categoryName} readOnly/>
             </div>
             <div>
                 <label>도서명</label>
-                <input type="text" readOnly/>
+                <input type="text" value={findBook.bookName} readOnly/>
             </div>
             <div>
                 <label>저자</label>
-                <input type="text" readOnly/>
+                <input type="text" value={findBook.authorName} readOnly/>
             </div>
             <div>
                 <label>출판사</label>
-                <input type="text" readOnly/>
+                <input type="text" value={findBook.publisherName} readOnly/>
             </div>
             <div>
                 <label>이미지 경로</label>
-                <input type="text" readOnly/>
+                <input type="text" value={findBook.coverImgUrl} readOnly/>
             </div>
             <button>등록</button>
         </div>
