@@ -3,7 +3,7 @@ import { css } from '@emotion/react';
 import axios from 'axios';
 import React, { useState } from 'react';
 import { BiSearch } from 'react-icons/bi';
-import { useMutation, useQuery } from 'react-query';
+import { useMutation, useQuery, useQueryClient } from 'react-query';
 
 const tableContainer = css`
     height: 300px;
@@ -22,7 +22,10 @@ const thAndTd = css`
 `;
 
 const BookRegister = () => {
+    const queryClient = useQueryClient();
+    
     const [ searchParams, setSearchParams ] = useState({page: 1, searchValue: ""});
+    const [ refresh, setRefresh ] = useState(true); 
 
     const getBooks = useQuery(["registerSearchBooks"], async ()=> {
         const option = {
@@ -34,16 +37,66 @@ const BookRegister = () => {
             }
         }
         return await axios.get("http://localhost:8080/books", option);
+    }, {
+        enabled: refresh,
+        onSuccess: () => {
+            setRefresh(false);
+        }
     });
 
     const registeBookList = useMutation();
+
+    const searchInputHandle = (e) => {
+        setSearchParams({...searchParams, searchValue: e.target.value});
+
+    }
+
+    const searchSubmitHandle = (e) => {
+        if(e.type !== "click") {
+            if(e.keyCode !== 13) {
+                return;
+            }
+        }
+        setSearchParams({...searchParams, page: 1});
+        setRefresh(true);
+    }
+
+    const pagination = () => {
+        if(getBooks.isLoading) {
+            return (<></>);
+        }
+
+        const nowPage = searchParams.page;
+
+        const lastPage = getBooks.data.data.totalCount % 20 === 0 
+            ? getBooks.data.data.totalCount / 20
+            : Math.floor(getBooks.data.data.totalCount / 20) + 1;
+        
+        const startIndex = nowPage % 5 === 0 ? nowPage - 4 : nowPage - (nowPage % 5) + 1;
+        const endIndex = startIndex + 4 <= lastPage ? startIndex + 4 : lastPage;
+
+        const pageNumbers = [];
+
+        for(let i = startIndex; i <= endIndex; i++) {
+            pageNumbers.push(i);
+        }
+
+        return (
+            <>
+                {pageNumbers.map(page => (<button onClick={() => {
+                    setSearchParams({...searchParams, page});
+                    setRefresh(true);
+                }}>{page}</button>))}
+            </>
+        )
+    }
 
     return (
         <div>
             <div>
                 <label>도서검색</label>
-                <input type="text" />
-                <button><BiSearch /></button>
+                <input type="text" onChange={searchInputHandle} onKeyUp={searchSubmitHandle}/>
+                <button onClick={searchSubmitHandle}><BiSearch /></button>
             </div>
             <div css={tableContainer}>
                 <table css={table}>
@@ -58,7 +111,7 @@ const BookRegister = () => {
                     </thead>
                     <tbody>
                         {getBooks.isLoading ? "" : getBooks.data.data.bookList.map(book => (
-                            <tr>
+                            <tr key={book.bookId}>
                                 <td css={thAndTd}><input type="radio" name='select' value={book.bookId}/></td>
                                 <td css={thAndTd}>{book.categoryName}</td>
                                 <td css={thAndTd}>{book.bookName}</td>
@@ -71,11 +124,7 @@ const BookRegister = () => {
             </div>
             <div>
                 <button>&#60;</button>
-                <button>1</button>
-                <button>2</button>
-                <button>3</button>
-                <button>4</button>
-                <button>5</button>
+                {pagination()}
                 <button>&#62;</button>
             </div>
             <div>
