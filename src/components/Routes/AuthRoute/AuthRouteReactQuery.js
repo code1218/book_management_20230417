@@ -7,12 +7,23 @@ import { useRecoilState } from 'recoil';
 
 const AuthRouteReactQuery = ({ path, element }) => {
     const [ refresh, setRefresh ] = useRecoilState(refreshState);
+
     const { data, isLoading } = useQuery(["authenticated"], async () => {
         const accessToken = localStorage.getItem("accessToken");
         const response = await axios.get("http://localhost:8080/auth/authenticated", {params: {accessToken}});
         return response;
     }, {
         enabled: refresh
+    });
+
+    const principal = useQuery(["principal"], async () => {
+        const accessToken = localStorage.getItem("accessToken");
+        const response = await axios.get("http://localhost:8080/auth/principal", 
+        {params: {accessToken}}, 
+        {
+            enabled: accessToken
+        });
+        return response;
     });
 
     useEffect(() => {
