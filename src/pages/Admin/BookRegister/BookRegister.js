@@ -4,6 +4,7 @@ import axios from 'axios';
 import React, { useState } from 'react';
 import { BiSearch } from 'react-icons/bi';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
+import Sidebar from '../../../components/Sidebar/Sidebar';
 
 const tableContainer = css`
     height: 300px;
@@ -52,7 +53,15 @@ const BookRegister = () => {
         }
     });
 
-    const registeBookList = useMutation();
+    const registeBookList = useMutation(async (bookId) => {
+        const option = {
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: localStorage.getItem("accessToken")
+            }
+        }
+        return await axios.post("http://localhost:8080/admin/book/list", JSON.stringify({bookId}), option);
+    });
 
     const searchInputHandle = (e) => {
         setSearchParams({...searchParams, searchValue: e.target.value});
@@ -131,6 +140,7 @@ const BookRegister = () => {
 
     return (
         <div>
+            <Sidebar />
             <div>
                 <label>도서검색</label>
                 <input type="text" onChange={searchInputHandle} onKeyUp={searchSubmitHandle}/>
@@ -187,7 +197,7 @@ const BookRegister = () => {
                 <label>이미지 경로</label>
                 <input type="text" value={findBook.coverImgUrl} readOnly/>
             </div>
-            <button>등록</button>
+            <button onClick={() => {registeBookList.mutate(findBook.bookId)}}>등록</button>
         </div>
     );
 };

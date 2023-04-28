@@ -1,26 +1,35 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { useQuery } from 'react-query';
+import { useQueries, useQuery } from 'react-query';
 import axios from 'axios';
-import { refreshState } from '../../../atoms/Auth/AuthAtoms';
+import { refreshState, refreshState2 } from '../../../atoms/Auth/AuthAtoms';
 import { useRecoilState } from 'recoil';
 
 const AuthRouteReactQuery = ({ path, element }) => {
     const [ refresh, setRefresh ] = useRecoilState(refreshState);
+    const [ refresh2, setRefresh2 ] = useRecoilState(refreshState2);
+
     const { data, isLoading } = useQuery(["authenticated"], async () => {
         const accessToken = localStorage.getItem("accessToken");
         const response = await axios.get("http://localhost:8080/auth/authenticated", {params: {accessToken}});
         return response;
     }, {
-        enabled: refresh
+        enabled: refresh,
+        onSuccess: (response) => {
+            if(!!response.data){
+                setRefresh2(true);
+            }else {
+                setRefresh2(false);
+            }
+        }
     });
 
     const principal = useQuery(["principal"], async () => {
         const accessToken = localStorage.getItem("accessToken");
-        const response = await axios.get("http://localhost:8080/auth/principal", {params: {accessToken}})
+        const response = await axios.get("http://localhost:8080/auth/principal", {params: {accessToken}});
         return response;
     },{
-        enabled: !!localStorage.getItem("accessToken")
+        enabled: refresh2
     });
 
     useEffect(() => {
@@ -29,9 +38,10 @@ const AuthRouteReactQuery = ({ path, element }) => {
         }
     }, [refresh]);
     
-    if(isLoading) {
+    if(isLoading || principal.isLoading) {
         return (<div>로딩중...</div>);
     }
+    console.log(principal.data)
 
     if(principal.data !== undefined) {
         const roles = principal.data.data.authorities.split(",");

@@ -68,7 +68,6 @@ const main = css`
 `;
 
 const Main = () => {
-    console.log("test")
     const [ searchParam, setSearchParam ] = useState({page: 1, searchValue: "", categoryIds: []});
     const [ refresh, setRefresh ] = useState(false);
     const [ categoryRefresh, setCategoryRefresh ] = useState(true);

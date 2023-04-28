@@ -5,6 +5,11 @@ export const refreshState = atom({
     default: true
 });
 
+export const refreshState2 = atom({
+    key: "refreshState2",
+    default: false
+});
+
 export const authenticatedState = atom({
     key: "authenticatedState",
     default: false

@@ -7,6 +7,8 @@ import { BiHome, BiLike, BiListUl, BiLogOut } from "react-icons/bi";
 import { useState } from 'react';
 import { useQuery, useQueryClient } from 'react-query';
 import axios from 'axios';
+import { useRecoilState } from 'recoil';
+import { refreshState, refreshState2 } from '../../atoms/Auth/AuthAtoms';
 
 const sidebar = (isOpen) => css`
     position: absolute;
@@ -98,6 +100,8 @@ const footer = css`
 `;
 
 const Sidebar = () => {
+    const [ refresh, setRefresh ] = useRecoilState(refreshState);
+    const [ refresh2, setRefresh2 ] = useRecoilState(refreshState2);
     const [ isOpen, setIsOpen ] = useState(false);
     const queryClient = useQueryClient();
 
@@ -114,14 +118,21 @@ const Sidebar = () => {
     const logoutClickHandle = () => {
         if(window.confirm("로그아웃 하시겠습니까?")) {
             localStorage.removeItem("accessToken");
+            setRefresh(false);
+            setRefresh2(false);
+            queryClient.invalidateQueries("principal");
+
         }
     }
+
+    // console.log(queryClient.getQueryState("principal"))
 
     if(queryClient.getQueryState("principal").status === "loading") {
         return <div>로딩중...</div>
     }
 
     const principalData = queryClient.getQueryData("principal").data;
+    const roles = principalData.authorities.split(",");
 
     return (
         <div css={sidebar(isOpen)} onClick={sidebarOpenClickHandle} >
@@ -139,6 +150,7 @@ const Sidebar = () => {
                 <ListButton title="Dashboard"><BiHome /></ListButton>
                 <ListButton title="Likes"><BiLike /></ListButton>
                 <ListButton title="Rental"><BiListUl /></ListButton>
+                {roles.includes("ROLE_ADMIN") ? (<ListButton title="RegisterBookList"><BiListUl /></ListButton>) : ""}
             </main>
             <footer css={footer}>
                 <ListButton title="Logout" onClick={logoutClickHandle}><BiLogOut /></ListButton>
